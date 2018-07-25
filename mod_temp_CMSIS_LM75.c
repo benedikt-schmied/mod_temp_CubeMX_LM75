@@ -44,11 +44,11 @@ int dev_temperature_LM75__init(uint32_t _i2c_clk_speed)
     /* executable statements */
 
     hi2c1.Instance              = I2C1;
-    hi2c1.Init.Timing           = 0x00707CBB;
-    hi2c1.Init.OwnAddress1      = 5A;
+    hi2c1.Init.Timing           = 0x0060112F;
+    hi2c1.Init.OwnAddress1      = 0x5A;
     hi2c1.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
     hi2c1.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
-    hi2c1.Init.OwnAddress2      = 0;
+    hi2c1.Init.OwnAddress2      = 0x5A;
     hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
     hi2c1.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
     hi2c1.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
@@ -88,11 +88,11 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
         PB8     ------> I2C1_SCL
         PB9     ------> I2C1_SDA
         */
-        GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-        GPIO_InitStruct.Pull = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-        GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+        GPIO_InitStruct.Pin         = I2C_SCL_PIN | I2C_SDA_PIN;
+        GPIO_InitStruct.Mode        = GPIO_MODE_AF_OD;
+        GPIO_InitStruct.Pull        = GPIO_PULLUP;
+        GPIO_InitStruct.Speed       = GPIO_SPEED_FREQ_MEDIUM;
+        GPIO_InitStruct.Alternate   = GPIO_AF4_I2C1;
         HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
         /* Peripheral clock enable */
@@ -136,12 +136,7 @@ uint16_t LM75_ReadReg(uint8_t reg)
 
 	/* executable statements */
 
-	/* send start */
-	I2C_GENERATE_START(I2C_ADDRESSINGMODE_7BIT, LM75_ADDR);
-
-	/* Enable I2C acknowledgment */
-
-	/* Wait for EV5 */
+ 	/* Wait for EV5 */
 	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
 
 	/* Send slave address */
