@@ -44,7 +44,7 @@ int dev_temperature_LM75__init(uint32_t _i2c_clk_speed)
     /* executable statements */
 
     hi2c1.Instance              = I2C1;
-    hi2c1.Init.Timing           = 0x0060112F;
+    hi2c1.Init.Timing           = 0x00922BFF;
     hi2c1.Init.OwnAddress1      = 0x5A;
     hi2c1.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
     hi2c1.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
@@ -128,30 +128,80 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 
 }
 
+enum temp_reg_e {
+    temperature,
+    configuration,
+    t_hyst,
+    t_os,
+    temp_reg_e_end
+};
+
+struct temp_reg_cfg_attr {
+    uint8_t addr;   /*!< in bytes */
+    uint8_t width;  /*!< in bytes */
+    union {
+        uint8_t _ui8;
+        uint16_t _ui16;
+        uint32_t _ui32;
+    } data;
+};
+
+struct temp_reg_cfg_attr temp_reg_cfg[4] = {
+        {
+            .addr   = 0,
+            .width  = 2
+        },
+        {
+            .addr   = 1,
+            .width  = 1
+        },
+        {
+            .addr   = 2,
+            .width  = 2
+        },
+        {
+            .addr   = 3,
+            .width  = 2
+        }
+};
+
 // Read 16-bit LM75 register
 uint16_t LM75_ReadReg(uint8_t reg)
 {
     /* automatic variables */
-	uint16_t value;
+    enum temp_reg_e iter;
+    uint16_t temp;
 
 	/* executable statements */
 
  	/* Wait for EV5 */
-	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
 
-	/* Send slave address */
+	for (iter = temperature; iter < temp_reg_e_end; iter++) {
 
-	HAL_I2C_Master_Transmit(&hi2c1, LM75_ADDR, &reg, sizeof(reg), 0);
+	    /* automatic variables */
+	    uint8_t addr;
 
-	while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+	    /* executable statements */
 
-//	I2C_GENERATE_START(I2C_ADDRESSINGMODE_7BIT, LM75_ADDR);
-//
-//    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
-//
-//	HAL_I2C_Master_Receive(&hi2c1, LM75_ADDR, &value, sizeof(value), 0);
+	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
 
-	return value;
+	    /* Send slave address */
+	    addr = temp_reg_cfg[iter].addr;
+
+	    HAL_I2C_Master_Transmit(&hi2c1, LM75_ADDR, &addr, sizeof(addr), 1000);
+
+	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+
+
+	    HAL_I2C_Master_Receive(&hi2c1, LM75_ADDR, &temp_reg_cfg[iter].data, temp_reg_cfg[iter].width, 1000);
+
+	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+
+	}
+
+	temp  = (temp_reg_cfg[temperature].data._ui16 & 0xFF) << 1;
+	temp |= (temp_reg_cfg[temperature].data._ui16 >> 8) & 0x1;
+	return (temp >> 1);
 }
 
 //// Write 16-bit LM75 register
