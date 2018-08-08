@@ -227,7 +227,7 @@ int mod_temp_CubeMX_LM75__get_temperatue(int32_t *_temp)
 }
 
 /**
- * mod_temp_CubeMX_LM75__get_temperatue
+ * mod_temp_CubeMX_LM75__define_mode
  */
 int mod_temp_CubeMX_LM75__define_mode(unsigned _goto)
 {

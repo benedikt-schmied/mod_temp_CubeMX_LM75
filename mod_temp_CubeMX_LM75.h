@@ -91,7 +91,7 @@ int mod_temp_CubeMX_LM75__init(uint32_t _i2c_clk_speed);
 int mod_temp_CubeMX_LM75__get_temperatue(int32_t *_temp);
 
 /**
- * mod_temp_CubeMX_LM75__get_temperatue
+ * tell us the desired mode (sleep or run)
  *
  * @param   _goto       desired mode
  *                      use the M_MOD_TEMP_CUBEMX_LM75__GOTO_(..) macro
