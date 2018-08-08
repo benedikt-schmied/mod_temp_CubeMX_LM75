@@ -1,12 +1,10 @@
-/*
- * lm75.c
+/***************************************************************************//**
+ * mod_temp_CubeMX_LM75.c
  *
- * explanation to come
- *
- *  Created on: 17.07.2017
- *      Author: Benedikt Schmied
- *
- *  Copyright (C) 2017  Benedikt Schmied
+ * LM75 driver which is based on a current implementation of ST's CubeMX
+ * framework
+
+ *  Copyright (C) 2018  Benedikt Schmied
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,25 +18,98 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+ *
+ *  github
+ *  email: github-ce@benedikt-schmied.de
+ *
+ ******************************************************************************/
+
+/***************************************************************************//**
+ *                                 CHANGELOG
+ * YYYY-MM-DD       AUTHOR  Comment
+ * 2017-07-17       BS      Initial Creation
+ *
+ ******************************************************************************/
 
 
-#include <mod_temp_CMSIS_LM75.h>
+////////////////////////////////////////////////////////////////////////////////
+/// Includes
+////////////////////////////////////////////////////////////////////////////////
+
+/* c - runtime */
+#include <stdint.h>
+#include <stddef.h>
+
+/* system */
 #include <stm32l0xx_hal.h>
 
+/* own libs */
+
+/* module (this project) */
+#include <mod_temp_CMSIS_LM75.h>
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Macros
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// Type definitions, structures and unions
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * enumeration
+ */
+enum temp_reg_e {
+    temperature,
+    configuration,
+    t_hyst,
+    t_os,
+    temp_reg_e_end
+};
+
+/**
+ * structure
+ */
+struct temp_reg_cfg_attr {
+    uint8_t addr;           /*!< absolute address */
+    uint8_t width;          /*!< in bytes */
+    union {
+        uint8_t _ui8;       /*!< unsigned character*/
+        uint16_t _ui16;     /*!< unsigned half word */
+        uint32_t _ui32;     /*!< unsigned word */
+    } data;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// (static) variables
+////////////////////////////////////////////////////////////////////////////////
 
 I2C_HandleTypeDef hi2c1;
 
+////////////////////////////////////////////////////////////////////////////////
+/// (static) function defintions
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+/**
+ * @brief error handler
+ */
 extern void _Error_Handler(char *, int);
 
-/*
+////////////////////////////////////////////////////////////////////////////////
+/// (global) function declaration
+////////////////////////////////////////////////////////////////////////////////
+
+
+/**
  * @param _i2c_clk_speed    clock speed
  *
  * @return
  */
 int dev_temperature_LM75__init(uint32_t _i2c_clk_speed)
 {
-
     /* automatic variables */
 
     /* executable statements */
@@ -58,20 +129,21 @@ int dev_temperature_LM75__init(uint32_t _i2c_clk_speed)
 
     /**Configure Analogue filter
     */
-    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-    {
+    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK) {
         _Error_Handler(__FILE__, __LINE__);
     }
 
     /**Configure Digital filter
     */
-    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-    {
+    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK) {
         _Error_Handler(__FILE__, __LINE__);
     }
     return 0;
 }
 
+/**
+ *
+ */
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
 
@@ -128,23 +200,7 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 
 }
 
-enum temp_reg_e {
-    temperature,
-    configuration,
-    t_hyst,
-    t_os,
-    temp_reg_e_end
-};
 
-struct temp_reg_cfg_attr {
-    uint8_t addr;   /*!< in bytes */
-    uint8_t width;  /*!< in bytes */
-    union {
-        uint8_t _ui8;
-        uint16_t _ui16;
-        uint32_t _ui32;
-    } data;
-};
 
 struct temp_reg_cfg_attr temp_reg_cfg[4] = {
         {
