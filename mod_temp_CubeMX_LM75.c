@@ -46,12 +46,30 @@
 /* own libs */
 
 /* module (this project) */
-#include <mod_temp_CMSIS_LM75.h>
+#include <mod_temp_CubeMX_LM75.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Macros
 ////////////////////////////////////////////////////////////////////////////////
+
+/* I2C to use for communications with LM75 */
+
+#define I2C_PORT         I2C1
+#define I2C_SCL_PIN      GPIO_PIN_8     // PB6
+#define I2C_SDA_PIN      GPIO_PIN_9    // PB7
+#define I2C_GPIO_PORT    GPIOB
+#define I2C_CLOCK        RCC_APB1Periph_I2C1
+
+
+/* LM75 defines */
+#define LM75_ADDR                     0x90 // LM75 address
+
+/* LM75 registers */
+#define LM75_REG_TEMP                 0x00 // Temperature
+#define LM75_REG_CONF                 0x01 // Configuration
+#define LM75_REG_THYS                 0x02 // Hysteresis
+#define LM75_REG_TOS                  0x03 // Overtemperature shutdown
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions
@@ -91,12 +109,24 @@ I2C_HandleTypeDef hi2c1;
 /// (static) function defintions
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
 /**
  * @brief error handler
  */
 extern void _Error_Handler(char *, int);
+
+void LM75_WriteReg(uint8_t reg, uint16_t value);
+
+uint16_t LM75_ReadReg(uint8_t reg);
+
+uint8_t LM75_ReadConf(void);
+
+void LM75_WriteConf(uint8_t value);
+
+void LM75_Shutdown(FunctionalState newstate);
+
+int16_t LM75_Temperature(void);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (global) function declaration
