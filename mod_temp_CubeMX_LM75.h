@@ -59,9 +59,26 @@
 /// (global) function declaration
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief mod_temp_CubeMX_LM75__init
+ *
+ * @param   _i2c_clk_speed      I2C clock speed
+ *
+ * @return 0 if successful, > 0 if error
+ *          * '-1', if parameter is invalid
+ */
+int mod_temp_CubeMX_LM75__init(uint32_t _i2c_clk_speed);
 
-int dev_temperature_LM75__init(uint32_t _i2c_clk_speed);
 
+/**
+ * @brief read the current temperature
+ *
+ * @remark blocking function
+ *
+ * @return 0 if successful, > 0 if error
+ *          * '-1', if parameter is invalid
+ */
+int mod_temp_CubeMX_LM75__get_temperatue(int32_t *_temp);
 
 #ifdef __cplusplus
 }

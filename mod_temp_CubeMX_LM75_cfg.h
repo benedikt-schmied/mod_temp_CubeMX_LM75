@@ -61,7 +61,8 @@
 
 
 /* LM75 defines */
-#define M_MOD_TEMP_CUBEMX_LM75__ADDR                     0x90 // LM75 address
+
+#define M_MOD_TEMP_CUBEMX_LM75__ADDR    0x90
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions

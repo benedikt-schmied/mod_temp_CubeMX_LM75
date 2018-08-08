@@ -46,13 +46,18 @@
 /* own libs */
 
 /* module (this project) */
-#include <mod_temp_CubeMX_LM75.h>
-#include <mod_temp_CubeMX_LM75_cfg.h>
+#include "mod_temp_CubeMX_LM75.h"
+#include "mod_temp_CubeMX_LM75_cfg.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Macros
 ////////////////////////////////////////////////////////////////////////////////
 
+#define M_MOD_TEMP_CUBEMX_LM75_IS_REG(_reg) \
+    ( \
+        (mod_temp_CubeMX_LM75_reg_temperature <= _reg) && \
+        (mod_temp_CubeMX_LM75_reg_cnt > _reg) \
+    )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions
@@ -60,17 +65,19 @@
 
 /**
  * enumeration
+ *
+ * @remark there is a macro for checking consistency
  */
-enum temp_reg_e {
-    temperature,
-    configuration,
-    t_hyst,
-    t_os,
-    temp_reg_e_end
+enum mod_temp_CubeMX_LM75_reg_selector {
+    mod_temp_CubeMX_LM75_reg_temperature,
+    mod_temp_CubeMX_LM75_reg_configuration,
+    mod_temp_CubeMX_LM75_reg_hyst,
+    mod_temp_CubeMX_LM75_reg_os,
+    mod_temp_CubeMX_LM75_reg_cnt
 };
 
 /**
- * structure
+ * structure: for register accesses (holds the configuration)
  */
 struct temp_reg_cfg_attr {
     uint8_t addr;           /*!< absolute address */
@@ -82,6 +89,15 @@ struct temp_reg_cfg_attr {
     } data;
 };
 
+/**
+ * union: holds the return values
+ */
+union mod_temp_CubeMX_LM75__reg_attr {
+    uint8_t _ui8;       /*!< unsigned character*/
+    uint16_t _ui16;     /*!< unsigned half word */
+    uint32_t _ui32;     /*!< unsigned word */
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// (static) variables
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +106,8 @@ I2C_HandleTypeDef hi2c1;
 
 /**
  * @brief configuration
+ *
+ * @remark this is C99 notation
  */
 static struct temp_reg_cfg_attr temp_reg_cfg[4] = {
         {
@@ -131,19 +149,21 @@ void LM75_Shutdown(FunctionalState newstate);
 
 int16_t LM75_Temperature(void);
 
+/**
+ * @brief internal 'read a register' function
+ */
+static int mod_temp_CubeMX_LM75__read_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr **_reg);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// (global) function declaration
+/// (global) function definition
 ////////////////////////////////////////////////////////////////////////////////
 
 
 /**
- * @param _i2c_clk_speed    clock speed
- *
- * @return
+ * mod_temp_CubeMX_LM75__init
  */
-int dev_temperature_LM75__init(uint32_t _i2c_clk_speed)
+int mod_temp_CubeMX_LM75__init(uint32_t _i2c_clk_speed)
 {
     /* automatic variables */
 
@@ -175,6 +195,41 @@ int dev_temperature_LM75__init(uint32_t _i2c_clk_speed)
     }
     return 0;
 }
+
+/**
+ * mod_temp_CubeMX_LM75__get_temperatue
+ */
+int mod_temp_CubeMX_LM75__get_temperatue(int32_t *_temp)
+{
+    /* automatic variables */
+    int ret;
+    union mod_temp_CubeMX_LM75__reg_attr *reg;
+
+    /* executable statements */
+    if (NULL == _temp) {
+        return -1;
+    }
+
+    ret = mod_temp_CubeMX_LM75__read_reg(mod_temp_CubeMX_LM75_reg_temperature, &reg);
+    if (0 == ret) {
+
+        /* convert the bit stream for the calleee */
+        *_temp  = (reg->_ui16 & 0xFF) << 1;
+        *_temp |= (reg->_ui16 >> 8) & 0x1;
+        *_temp >>= 1;
+
+        /* return Ok */
+        return ret;
+    } else {
+
+        /* map all values */
+        return -1;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// (static ) function definition
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  *
@@ -235,48 +290,41 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 
 }
 
-
-
-
-
-// Read 16-bit LM75 register
-uint16_t LM75_ReadReg(uint8_t reg)
+/**
+ * @brief mod_temp_CubeMX_LM75__read_reg
+ */
+static int mod_temp_CubeMX_LM75__read_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr **_reg)
 {
     /* automatic variables */
-    enum temp_reg_e iter;
-    uint16_t temp;
+    uint8_t addr;
 
-	/* executable statements */
+    /* executable statements */
 
- 	/* Wait for EV5 */
+    /* check, whether this is a valid arguments */
+    if (!M_MOD_TEMP_CUBEMX_LM75_IS_REG(_sel)) {
+        return -1;
+    }
+    if (_reg == NULL) {
+        return -1;
+    }
 
-	for (iter = temperature; iter < temp_reg_e_end; iter++) {
+    /* everything seems to valid, hence start the read procedure */
+    addr = temp_reg_cfg[_sel].addr;
 
-	    /* automatic variables */
-	    uint8_t addr;
+    /* first, select the required register (write operation) */
+    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &addr, sizeof(addr), 1000);
 
-	    /* executable statements */
+    /* second, read from the slave */
+    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Receive(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, (void *)&temp_reg_cfg[_sel].data, temp_reg_cfg[_sel].width, 1000);
 
-	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
-
-	    /* Send slave address */
-	    addr = temp_reg_cfg[iter].addr;
-
-	    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &addr, sizeof(addr), 1000);
-
-	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
-
-
-	    HAL_I2C_Master_Receive(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &temp_reg_cfg[iter].data, temp_reg_cfg[iter].width, 1000);
-
-	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
-
-	}
-
-	temp  = (temp_reg_cfg[temperature].data._ui16 & 0xFF) << 1;
-	temp |= (temp_reg_cfg[temperature].data._ui16 >> 8) & 0x1;
-	return (temp >> 1);
+    *_reg =  &temp_reg_cfg[_sel].data;
+    return 0;
 }
+
+
+
 
 //// Write 16-bit LM75 register
 //void LM75_WriteReg(uint8_t reg, uint16_t value) {
