@@ -143,18 +143,6 @@ static struct temp_reg_cfg_attr temp_reg_cfg[4] = {
  */
 extern void _Error_Handler(char *, int);
 
-void LM75_WriteReg(uint8_t reg, uint16_t value);
-
-uint16_t LM75_ReadReg(uint8_t reg);
-
-uint8_t LM75_ReadConf(void);
-
-void LM75_WriteConf(uint8_t value);
-
-void LM75_Shutdown(FunctionalState newstate);
-
-int16_t LM75_Temperature(void);
-
 /**
  * @brief internal 'read a register' function
  */
