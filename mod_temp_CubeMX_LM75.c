@@ -354,33 +354,6 @@ static int mod_temp_CubeMX_LM75__write_reg(enum mod_temp_CubeMX_LM75_reg_selecto
     return 0;
 }
 
-//
-//// Write value to LM75 configuration register  (8 bit)
-//void LM75_WriteConf(uint8_t value) {
-//	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
-//	I2C_GenerateSTART(I2C_PORT,ENABLE);
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
-//	I2C_SendData(I2C_PORT,LM75_REG_CONF); // Send register address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_SendData(I2C_PORT,value);
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_GenerateSTOP(I2C_PORT,ENABLE);
-//}
-//
-//// Set LM75 shutdown mode
-//// newstate:
-////    ENABLE = put LM75 into powerdown mode
-////    DISABLE = wake up LM75
-//void LM75_Shutdown(FunctionalState newstate) {
-//	uint8_t value;
-//
-//	value = LM75_ReadConf();
-//	LM75_WriteConf(newstate == ENABLE ? value | 0x01 : value & 0xFE);
-//}
-//
-
 /**
  *
  */
