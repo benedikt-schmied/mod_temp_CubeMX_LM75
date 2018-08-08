@@ -1,5 +1,5 @@
 /***************************************************************************//**
- * mod_temp_CubeMX_LM75.h
+ * mod_temp_CubeMX_LM75_cfg.h
  *
  * LM75 driver which is based on a current implementation of ST's CubeMX
  * framework
@@ -24,8 +24,8 @@
  *
  ******************************************************************************/
 
-#ifndef __MOD_TEMP_CUBEMX_LM75_H__
-#define __MOD_TEMP_CUBEMX_LM75_H__
+#ifndef __MOD_TEMP_CUBEMX_LM75_CFG__H__
+#define __MOD_TEMP_CUBEMX_LM75_CFG__H__
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Includes
@@ -51,6 +51,18 @@
 /// Macros
 ////////////////////////////////////////////////////////////////////////////////
 
+/* I2C to use for communications with LM75 */
+
+#define I2C_PORT         I2C1
+#define I2C_SCL_PIN      GPIO_PIN_8     // PB6
+#define I2C_SDA_PIN      GPIO_PIN_9    // PB7
+#define I2C_GPIO_PORT    GPIOB
+#define I2C_CLOCK        RCC_APB1Periph_I2C1
+
+
+/* LM75 defines */
+#define M_MOD_TEMP_CUBEMX_LM75__ADDR                     0x90 // LM75 address
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,11 +72,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-int dev_temperature_LM75__init(uint32_t _i2c_clk_speed);
-
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __MOD_TEMP_CUBEMX_LM75_H__ */
+#endif /* __MOD_TEMP_CUBEMX_LM75_CFG__H__ */

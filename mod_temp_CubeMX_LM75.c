@@ -47,29 +47,12 @@
 
 /* module (this project) */
 #include <mod_temp_CubeMX_LM75.h>
-
+#include <mod_temp_CubeMX_LM75_cfg.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Macros
 ////////////////////////////////////////////////////////////////////////////////
 
-/* I2C to use for communications with LM75 */
-
-#define I2C_PORT         I2C1
-#define I2C_SCL_PIN      GPIO_PIN_8     // PB6
-#define I2C_SDA_PIN      GPIO_PIN_9    // PB7
-#define I2C_GPIO_PORT    GPIOB
-#define I2C_CLOCK        RCC_APB1Periph_I2C1
-
-
-/* LM75 defines */
-#define LM75_ADDR                     0x90 // LM75 address
-
-/* LM75 registers */
-#define LM75_REG_TEMP                 0x00 // Temperature
-#define LM75_REG_CONF                 0x01 // Configuration
-#define LM75_REG_THYS                 0x02 // Hysteresis
-#define LM75_REG_TOS                  0x03 // Overtemperature shutdown
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions
@@ -104,6 +87,28 @@ struct temp_reg_cfg_attr {
 ////////////////////////////////////////////////////////////////////////////////
 
 I2C_HandleTypeDef hi2c1;
+
+/**
+ * @brief configuration
+ */
+static struct temp_reg_cfg_attr temp_reg_cfg[4] = {
+        {
+            .addr   = 0,
+            .width  = 2
+        },
+        {
+            .addr   = 1,
+            .width  = 1
+        },
+        {
+            .addr   = 2,
+            .width  = 2
+        },
+        {
+            .addr   = 3,
+            .width  = 2
+        }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (static) function defintions
@@ -232,24 +237,7 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 
 
 
-struct temp_reg_cfg_attr temp_reg_cfg[4] = {
-        {
-            .addr   = 0,
-            .width  = 2
-        },
-        {
-            .addr   = 1,
-            .width  = 1
-        },
-        {
-            .addr   = 2,
-            .width  = 2
-        },
-        {
-            .addr   = 3,
-            .width  = 2
-        }
-};
+
 
 // Read 16-bit LM75 register
 uint16_t LM75_ReadReg(uint8_t reg)
@@ -274,12 +262,12 @@ uint16_t LM75_ReadReg(uint8_t reg)
 	    /* Send slave address */
 	    addr = temp_reg_cfg[iter].addr;
 
-	    HAL_I2C_Master_Transmit(&hi2c1, LM75_ADDR, &addr, sizeof(addr), 1000);
+	    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &addr, sizeof(addr), 1000);
 
 	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
 
 
-	    HAL_I2C_Master_Receive(&hi2c1, LM75_ADDR, &temp_reg_cfg[iter].data, temp_reg_cfg[iter].width, 1000);
+	    HAL_I2C_Master_Receive(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &temp_reg_cfg[iter].data, temp_reg_cfg[iter].width, 1000);
 
 	    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
 
@@ -295,7 +283,7 @@ uint16_t LM75_ReadReg(uint8_t reg)
 //	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
 //	I2C_GenerateSTART(I2C_PORT,ENABLE);
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,LM75_ADDR,I2C_Direction_Transmitter); // Send slave address
+//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
 //	I2C_SendData(I2C_PORT,reg); // Send register address
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
@@ -313,13 +301,13 @@ uint16_t LM75_ReadReg(uint8_t reg)
 //	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
 //	I2C_GenerateSTART(I2C_PORT,ENABLE);
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,LM75_ADDR,I2C_Direction_Transmitter); // Send slave address
+//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
 //	I2C_SendData(I2C_PORT,LM75_REG_CONF); // Send register address
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
 //	I2C_GenerateSTART(I2C_PORT,ENABLE); // Send repeated START condition (aka Re-START)
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,LM75_ADDR,I2C_Direction_Receiver); // Send slave address for READ
+//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Receiver); // Send slave address for READ
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)); // Wait for EV6
 //	I2C_AcknowledgeConfig(I2C_PORT,DISABLE); // Disable I2C acknowledgment
 //	I2C_GenerateSTOP(I2C_PORT,ENABLE); // Send STOP condition
@@ -334,7 +322,7 @@ uint16_t LM75_ReadReg(uint8_t reg)
 //	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
 //	I2C_GenerateSTART(I2C_PORT,ENABLE);
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,LM75_ADDR,I2C_Direction_Transmitter); // Send slave address
+//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
 //	I2C_SendData(I2C_PORT,LM75_REG_CONF); // Send register address
 //	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
