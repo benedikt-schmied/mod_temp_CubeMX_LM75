@@ -59,6 +59,12 @@
         (mod_temp_CubeMX_LM75_reg_cnt > _reg) \
     )
 
+#define M_MOD_TEMP_CUBEMX_LM75_IS_GOTO(_goto) \
+    ( \
+        (M_MOD_TEMP_CUBEMX_LM75__GOTO_SLEEP == _goto) || \
+        (M_MOD_TEMP_CUBEMX_LM75__GOTO_RUN   == _goto) \
+    )
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +160,11 @@ int16_t LM75_Temperature(void);
  */
 static int mod_temp_CubeMX_LM75__read_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr **_reg);
 
+/**
+ * @brief internal 'write a register' function
+ */
+static int mod_temp_CubeMX_LM75__write_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr *_reg);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (global) function definition
@@ -227,9 +238,148 @@ int mod_temp_CubeMX_LM75__get_temperatue(int32_t *_temp)
     }
 }
 
+/**
+ * mod_temp_CubeMX_LM75__get_temperatue
+ */
+int mod_temp_CubeMX_LM75__define_mode(unsigned _goto)
+{
+    /* automatic variables */
+    int ret;
+    union mod_temp_CubeMX_LM75__reg_attr reg;
+
+    /* executable statements */
+    if (!M_MOD_TEMP_CUBEMX_LM75_IS_GOTO(_goto)) {
+        return -1;
+    }
+
+    /*
+     *  we probably have to read from the register first and mask all other
+     *  values
+     */
+
+    /* switch - case - statement */
+    switch (_goto) {
+    case M_MOD_TEMP_CUBEMX_LM75__GOTO_SLEEP:
+        reg._ui8 = 0;
+        break;
+    case M_MOD_TEMP_CUBEMX_LM75__GOTO_RUN:
+        reg._ui8 = 0;
+        break;
+    default:
+        break;
+    } /* end of switch - case - statement */
+
+    /*  */
+    ret = mod_temp_CubeMX_LM75__write_reg(mod_temp_CubeMX_LM75_reg_temperature, &reg);
+    if (0 == ret) {
+        return ret;
+    } else {
+
+        /* map all values */
+        return -1;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// (static ) function definition
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+/**
+ * @brief mod_temp_CubeMX_LM75__read_reg
+ */
+static int mod_temp_CubeMX_LM75__read_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr **_reg)
+{
+    /* automatic variables */
+    uint8_t addr;
+
+    /* executable statements */
+
+    /* check, whether this is a valid arguments */
+    if (!M_MOD_TEMP_CUBEMX_LM75_IS_REG(_sel)) {
+        return -1;
+    }
+    if (_reg == NULL) {
+        return -1;
+    }
+
+    /* everything seems to valid, hence start the read procedure */
+    addr = temp_reg_cfg[_sel].addr;
+
+    /* first, select the required register (write operation) */
+    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &addr, sizeof(addr), 1000);
+
+    /* second, read from the slave */
+    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Receive(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, (void *)&temp_reg_cfg[_sel].data, temp_reg_cfg[_sel].width, 1000);
+
+    *_reg =  &temp_reg_cfg[_sel].data;
+    return 0;
+}
+
+
+/**
+ * @brief mod_temp_CubeMX_LM75__write_reg
+ */
+static int mod_temp_CubeMX_LM75__write_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr *_reg)
+{
+    /* automatic variables */
+    uint8_t addr;
+
+    /* executable statements */
+
+    /* check, whether this is a valid arguments */
+    if (!M_MOD_TEMP_CUBEMX_LM75_IS_REG(_sel)) {
+        return -1;
+    }
+    if (_reg == NULL) {
+        return -1;
+    }
+
+    /* everything seems to valid, hence start the read procedure */
+    addr = temp_reg_cfg[_sel].addr;
+
+    /* first, select the required register (write operation) */
+    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &addr, sizeof(addr), 1000);
+
+    /* second, read from the slave */
+    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, (void *)&temp_reg_cfg[_sel].data, temp_reg_cfg[_sel].width, 1000);
+
+    /* copy the currently written value */
+    memcpy((void *)&temp_reg_cfg[_sel].data, _reg, temp_reg_cfg[_sel].width);
+    return 0;
+}
+
+//
+//// Write value to LM75 configuration register  (8 bit)
+//void LM75_WriteConf(uint8_t value) {
+//	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
+//	I2C_GenerateSTART(I2C_PORT,ENABLE);
+//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
+//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
+//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
+//	I2C_SendData(I2C_PORT,LM75_REG_CONF); // Send register address
+//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
+//	I2C_SendData(I2C_PORT,value);
+//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
+//	I2C_GenerateSTOP(I2C_PORT,ENABLE);
+//}
+//
+//// Set LM75 shutdown mode
+//// newstate:
+////    ENABLE = put LM75 into powerdown mode
+////    DISABLE = wake up LM75
+//void LM75_Shutdown(FunctionalState newstate) {
+//	uint8_t value;
+//
+//	value = LM75_ReadConf();
+//	LM75_WriteConf(newstate == ENABLE ? value | 0x01 : value & 0xFE);
+//}
+//
 
 /**
  *
@@ -289,125 +439,3 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
   }
 
 }
-
-/**
- * @brief mod_temp_CubeMX_LM75__read_reg
- */
-static int mod_temp_CubeMX_LM75__read_reg(enum mod_temp_CubeMX_LM75_reg_selector _sel, union mod_temp_CubeMX_LM75__reg_attr **_reg)
-{
-    /* automatic variables */
-    uint8_t addr;
-
-    /* executable statements */
-
-    /* check, whether this is a valid arguments */
-    if (!M_MOD_TEMP_CUBEMX_LM75_IS_REG(_sel)) {
-        return -1;
-    }
-    if (_reg == NULL) {
-        return -1;
-    }
-
-    /* everything seems to valid, hence start the read procedure */
-    addr = temp_reg_cfg[_sel].addr;
-
-    /* first, select the required register (write operation) */
-    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
-    HAL_I2C_Master_Transmit(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, &addr, sizeof(addr), 1000);
-
-    /* second, read from the slave */
-    while (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY);
-    HAL_I2C_Master_Receive(&hi2c1, M_MOD_TEMP_CUBEMX_LM75__ADDR, (void *)&temp_reg_cfg[_sel].data, temp_reg_cfg[_sel].width, 1000);
-
-    *_reg =  &temp_reg_cfg[_sel].data;
-    return 0;
-}
-
-
-
-
-//// Write 16-bit LM75 register
-//void LM75_WriteReg(uint8_t reg, uint16_t value) {
-//	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
-//	I2C_GenerateSTART(I2C_PORT,ENABLE);
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
-//	I2C_SendData(I2C_PORT,reg); // Send register address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_SendData(I2C_PORT,(uint8_t)(value >> 8)); // Send high byte
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_SendData(I2C_PORT,(uint8_t)value); // Send low byte
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_GenerateSTOP(I2C_PORT,ENABLE);
-//}
-//
-//// Read value from LM75 configuration register (8 bit)
-//uint8_t LM75_ReadConf(void) {
-//	uint8_t value;
-//
-//	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
-//	I2C_GenerateSTART(I2C_PORT,ENABLE);
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
-//	I2C_SendData(I2C_PORT,LM75_REG_CONF); // Send register address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_GenerateSTART(I2C_PORT,ENABLE); // Send repeated START condition (aka Re-START)
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Receiver); // Send slave address for READ
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)); // Wait for EV6
-//	I2C_AcknowledgeConfig(I2C_PORT,DISABLE); // Disable I2C acknowledgment
-//	I2C_GenerateSTOP(I2C_PORT,ENABLE); // Send STOP condition
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_RECEIVED)); // Wait for EV7 (Byte received from slave)
-//	value = I2C_ReceiveData(I2C_PORT);
-//
-//	return value;
-//}
-//
-//// Write value to LM75 configuration register  (8 bit)
-//void LM75_WriteConf(uint8_t value) {
-//	I2C_AcknowledgeConfig(I2C_PORT,ENABLE); // Enable I2C acknowledgment
-//	I2C_GenerateSTART(I2C_PORT,ENABLE);
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_MODE_SELECT)); // Wait for EV5
-//	I2C_Send7bitAddress(I2C_PORT,M_MOD_TEMP_CUBEMX_LM75__ADDR,I2C_Direction_Transmitter); // Send slave address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)); // Wait for EV6
-//	I2C_SendData(I2C_PORT,LM75_REG_CONF); // Send register address
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_SendData(I2C_PORT,value);
-//	while (!I2C_CheckEvent(I2C_PORT,I2C_EVENT_MASTER_BYTE_TRANSMITTED)); // Wait for EV8
-//	I2C_GenerateSTOP(I2C_PORT,ENABLE);
-//}
-//
-//// Set LM75 shutdown mode
-//// newstate:
-////    ENABLE = put LM75 into powerdown mode
-////    DISABLE = wake up LM75
-//void LM75_Shutdown(FunctionalState newstate) {
-//	uint8_t value;
-//
-//	value = LM75_ReadConf();
-//	LM75_WriteConf(newstate == ENABLE ? value | 0x01 : value & 0xFE);
-//}
-//
-//// Read temperature readings from LM75 in decimal format
-//// IIIF where:
-////   III - integer part
-////   F   - fractional part
-//// e.g. 355 means 35.5C
-//int16_t LM75_Temperature(void) {
-//
-//	uint16_t raw;
-//	int16_t temp;
-//
-//	raw = LM75_ReadReg(LM75_REG_TEMP) >> 7;
-//	if (raw & 0x0100) {
-//		// Negative temperature
-//		temp = -10 * (((~(uint8_t)(raw & 0xFE) + 1) & 0x7F) >> 1) - (raw & 0x01) * 5;
-//	} else {
-//		// Positive temperature
-//		temp = ((raw & 0xFE) >> 1) * 10 + (raw & 0x01) * 5;
-//	}
-//
-//	return temp;
-//}

@@ -51,9 +51,16 @@
 /// Macros
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * macro, which help to choose the desired mode
+ */
+#define M_MOD_TEMP_CUBEMX_LM75__GOTO_SLEEP      (0U)
+#define M_MOD_TEMP_CUBEMX_LM75__GOTO_RUN        (M_MOD_TEMP_CUBEMX_LM75__GOTO_SLEEP + 1U)
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Type definitions, structures and unions
 ////////////////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (global) function declaration
@@ -75,10 +82,24 @@ int mod_temp_CubeMX_LM75__init(uint32_t _i2c_clk_speed);
  *
  * @remark blocking function
  *
+ * @param [out]     *_temp      reference onto variable which will receive
+ *                              the temperature
+ *
  * @return 0 if successful, > 0 if error
  *          * '-1', if parameter is invalid
  */
 int mod_temp_CubeMX_LM75__get_temperatue(int32_t *_temp);
+
+/**
+ * mod_temp_CubeMX_LM75__get_temperatue
+ *
+ * @param   _goto       desired mode
+ *                      use the M_MOD_TEMP_CUBEMX_LM75__GOTO_(..) macro
+ *
+ * @return 0 if successful, > 0 if error
+ *         * '-1', if parameter is invalid
+ */
+int mod_temp_CubeMX_LM75__define_mode(unsigned _goto);
 
 #ifdef __cplusplus
 }
